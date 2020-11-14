@@ -9,11 +9,13 @@ AUTH0_DOMAIN = 'fahadxt.us.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'coffee_shop'
 
+
 # AuthError Exception
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
         self.status_code = status_code
+
 
 # Auth Header
 def get_token_auth_header():
@@ -46,6 +48,7 @@ def get_token_auth_header():
     token = parts[1]
     return token
 
+
 def check_permissions(permission, payload):
     if permission in payload['permissions']:
         return True
@@ -53,6 +56,7 @@ def check_permissions(permission, payload):
         "code": "Unauthorized",
         "description": "You don't have permissions to access this resource"
     }, 401)
+
 
 def verify_decode_jwt(token):
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
@@ -106,6 +110,7 @@ def verify_decode_jwt(token):
                 'code': 'invalid_header',
                 'description': 'Unable to find the appropriate key.'
             }, 401)
+
 
 def requires_auth(permission=''):
     def requires_auth_decorator(f):
