@@ -14,6 +14,7 @@ CORS(app)
 # uncomment the following line to initialize the datbase
 db_drop_and_create_all()
 
+
 # endpoint for all available drinks, and show short details about a drink
 @app.route('/drinks', methods=['GET'])
 def drinks_index():
@@ -26,7 +27,7 @@ def drinks_index():
     })
 
 
-# endpoint for all available drinks, and show all details about a drink, and require the 'get:drinks-detail' permission
+# endpoint for show detail a drink, and require permission 'get:drinks-detail'
 @app.route('/drinks-detail', methods=['GET'])
 @requires_auth('get:drinks-detail')
 def drink_detail(payload):
@@ -43,14 +44,14 @@ def drink_detail(payload):
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
 def drink_store(payload):
-    body = request.get_json()  
+    body = request.get_json()
     title = body.get('title', None)
     recipe = body.get('recipe', None)
 
     try:
         drink = Drink(
-            title=title, 
-            recipe=json.dumps(recipe) 
+            title=title,
+            recipe=json.dumps(recipe)
         )
         drink.insert()
 
@@ -58,39 +59,35 @@ def drink_store(payload):
             'success': True,
             "drinks": drink.long()
         })
-        
-    except:
+
+    except BaseException:
         abort(422)
 
 
 # endpoint for update a drink, and require the 'patch:drinks' permission
 @app.route('/drinks/<int:id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
-def drink_update(payload,id):
+def drink_update(payload, id):
     body = request.get_json()
     drink = Drink.query.filter(Drink.id == id).one_or_none()
 
-    if drink:
-        try:
-            title = body.get('title')
-            recipe = body.get('recipe')
+    try:
+        title = body.get('title')
+        recipe = body.get('recipe')
 
-            if title:
-                drink.title = title
+        if title:
+            drink.title = title
 
-            if recipe:
-                drink.recipe = json.dumps(recipe) 
+        if recipe:
+            drink.recipe = json.dumps(recipe)
 
-            drink.update()
+        drink.update()
 
-        except:
-            abort(422)
-
-    else:
-        abort(404)
+    except BaseException:
+        abort(422)
 
     return jsonify({
-        'success': True, 
+        'success': True,
         'drinks': [drink.long()]
     })
 
@@ -98,18 +95,13 @@ def drink_update(payload,id):
 # endpoint for destroy a drink, and require the 'delete:drinks' permission
 @app.route('/drinks/<int:id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
-def drink_destroy(payload,id):
+def drink_destroy(payload, id):
     drink = Drink.query.filter(Drink.id == id).one_or_none()
+    try:
+        drink.delete()
 
-    if drink:
-        try:
-            drink.delete()
-
-        except:
-            abort(400)
-    
-    else:
-        abort(404)
+    except BaseException:
+        abort(400)
 
     return jsonify({'success': True, 'delete': id}), 200
 
@@ -118,10 +110,11 @@ def drink_destroy(payload,id):
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
-        "success": False, 
+        "success": False,
         "error": 422,
         "message": "unprocessable"
     }), 422
+
 
 @app.errorhandler(400)
 def bad_request(error):
@@ -130,6 +123,7 @@ def bad_request(error):
         "error": 400,
         "message": 'Bad Request'
     }), 400
+
 
 @app.errorhandler(404)
 def not_found(error):
